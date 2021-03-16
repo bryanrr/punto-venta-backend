@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.autoservicio.puntoventa.filters.JwtRequestFilter;
+import com.autoservicio.puntoventa.filters.MyCorsFilter;
 
 
 @Configuration
@@ -27,6 +28,9 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter{
 	@Autowired
 	private JwtRequestFilter jwtRequestFilter;
 	
+	@Autowired
+	private MyCorsFilter corsFilter;
+	
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 		auth.jdbcAuthentication().dataSource(dataSource);
@@ -34,9 +38,10 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter{
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.csrf().disable().authorizeRequests().antMatchers("/authenticate","/login", "/js/**","/assets/images/**").permitAll()
+		http.csrf().disable().authorizeRequests().antMatchers("/authenticate","/login","/css/**", "/js/**","/assets/images/**").permitAll()
 			.anyRequest().authenticated().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 		http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+		http.addFilter(corsFilter);
 	}
 	
 	@Override
