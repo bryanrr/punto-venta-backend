@@ -1,9 +1,11 @@
 package com.autoservicio.puntoventa.filters;
 
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -30,14 +32,19 @@ public class JwtRequestFilter extends OncePerRequestFilter{
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-		final String authorizationHeader=request.getHeader("Authorization");
-		
-		String username= null;
 		String jwt=null;
+		String username= null;
 		
-		if(authorizationHeader!= null && authorizationHeader.startsWith("Bearer ")) {
-			jwt=authorizationHeader.substring(7);
-			System.out.println(authorizationHeader);
+		Cookie[] cookies=request.getCookies();
+		if(cookies!=null) {
+			for(Cookie cookie:cookies) {
+				if(cookie.getName().equals("token")) {
+					jwt=cookie.getValue();
+				}
+			}
+		}
+		
+		if(jwt!=null) {
 			username=jwtUtil.extractUsername(jwt);
 		}
 		
