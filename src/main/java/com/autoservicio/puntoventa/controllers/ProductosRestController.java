@@ -1,8 +1,13 @@
 package com.autoservicio.puntoventa.controllers;
 
+import java.net.http.HttpResponse;
 import java.util.List;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -39,19 +44,22 @@ public class ProductosRestController {
 	JwtUtil jwtTokenUtil;
 	
 	@RequestMapping(value="/authenticate", method=RequestMethod.POST)
-	public ResponseEntity<?>createAuthenticationToken(@RequestBody AuthenticationRequest authRequest)throws Exception{
+	public ResponseEntity <String>createAuthenticationToken(@RequestBody AuthenticationRequest authRequest,HttpServletResponse httpResponse)throws Exception{
 		try {
 		authManager.authenticate(
 			new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
 		}catch(BadCredentialsException e) {
-			throw new Exception("Incorrect username or password",e);
+			return new ResponseEntity<String>("incorrect",HttpStatus.OK);
 		}
 		
 		final UserDetails userDetails=userDetailsService.loadUserByUsername(authRequest.getUsername());
 		final String jwt=jwtTokenUtil.generateToken(userDetails);
-		System.out.println("controller "+jwt);
 		
-		return ResponseEntity.ok(new AuthenticationResponse(jwt));
+		Cookie cookie=new Cookie("token",jwt);
+		cookie.setHttpOnly(true);
+		httpResponse.addCookie(cookie);
+		
+		return new ResponseEntity<String>("",HttpStatus.OK);
 	}
 	
 	@GetMapping(value={"/producto/{barcode}"})
