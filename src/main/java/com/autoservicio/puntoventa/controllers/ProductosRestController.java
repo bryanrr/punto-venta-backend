@@ -27,6 +27,8 @@ import com.autoservicio.puntoventa.services.JwtBlacklistService;
 import com.autoservicio.puntoventa.services.ProductosService;
 import com.autoservicio.puntoventa.util.JwtUtil;
 
+import io.jsonwebtoken.JwtException;
+
 
 @RestController
 public class ProductosRestController {
@@ -67,6 +69,31 @@ public class ProductosRestController {
 		httpResponse.setHeader("Set-Cookie", header);
 		httpResponse.setStatus(204);
 		
+	}
+	
+	@RequestMapping(value="/logout", method=RequestMethod.POST)
+	public void logout(HttpServletRequest httpRequest, HttpServletResponse httpResponse)throws Exception{
+		Optional<String>optionalJwt=Arrays.stream(httpRequest.getCookies())
+				.filter(cookie->cookie.getName().equals("token")).map(Cookie::getValue)
+				.findAny();
+		if(optionalJwt.isPresent()) {
+			try {
+				jwtTokenUtil.extractExpiration(optionalJwt.get());
+				jwtBlacklistService.addJwtToBlacklist(optionalJwt.get());
+				
+				Cookie cookie=new Cookie("token","");
+				cookie.setHttpOnly(true);
+				cookie.setMaxAge(0);
+				
+				httpResponse.addCookie(cookie);
+				httpResponse.setStatus(204);
+			}catch(JwtException c) {
+				httpResponse.sendError(403);
+			}
+			
+		}else {
+			httpResponse.sendError(403);
+		}
 	}
 	
 	@GetMapping(value={"/producto/{barcode}"})
