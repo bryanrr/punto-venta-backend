@@ -1,10 +1,11 @@
 package com.autoservicio.puntoventa.util;
 
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import javax.crypto.SecretKey;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -12,11 +13,12 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.impl.crypto.MacProvider;
 
 @Service
 public class JwtUtil {
 	
-	private String SECRET="DUMMY_VALUE";
+	private SecretKey SECRETKEY=MacProvider.generateKey();
 	
 	public String extractUsername(String token) {
 		return extractClaim(token, Claims::getSubject);
@@ -33,11 +35,11 @@ public class JwtUtil {
 	}
 	
 	private Claims extractAllClaims(String token) {
-		return Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token).getBody();
+		return Jwts.parser().setSigningKey(SECRETKEY).parseClaimsJws(token).getBody();
 	}
 	
 	private Boolean isTokenExpired(String token) {
-		// TODO Auto-generated method stub
+		
 		return extractExpiration(token).before(new Date());
 	}
 
@@ -47,19 +49,18 @@ public class JwtUtil {
 	}
 
 	private String createToken(Map<String, Object> claims, String username) {
-		// TODO Auto-generated method stub
 		return Jwts.builder().setClaims(claims).setSubject(username).setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis()+100*60*60*10))
-				.signWith(SignatureAlgorithm.HS256, SECRET).compact();
+				.setExpiration(new Date(System.currentTimeMillis()+100*60*120*10))
+				.signWith(SignatureAlgorithm.HS512, SECRETKEY).compact();
 	}
 	
 	public Boolean validateToken(String token,UserDetails userDetails) {
 		final String username=extractUsername(token);
-		
-		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+		if(userDetails!=null) {
+			return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+		}
+		else {
+			return false;
+		}
 	}
-
-	
-
-	
 }

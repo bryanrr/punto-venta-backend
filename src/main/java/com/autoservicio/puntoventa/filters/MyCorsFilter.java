@@ -21,14 +21,28 @@ public class MyCorsFilter extends CorsFilter{
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
+		
+		if(isPreFlight(request)) {
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+	        response.setHeader("Access-Control-Allow-Methods", "POST, GET");
+	        response.setHeader("Access-Control-Max-Age", String.valueOf(60*60));
+	        response.setHeader("Access-Control-Allow-Headers","Content-Type");
+		}
 
         response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Allow-Methods", "POST, GET");
-        response.setHeader("Access-Control-Max-Age", "3600");
-        response.setHeader("Access-Control-Allow-Headers",
-                "Content-Type, Accept, X-Requested-With, remember-me, authorization, x-auth-token");
-				
+        
         filterChain.doFilter(request, response);
+	}
+	
+	private Boolean isPreFlight(HttpServletRequest httpServletRequest) {
+		String httpMethod=httpServletRequest.getMethod();
+		String originHeader=httpServletRequest.getHeader("origin");
+		String requestMethod=httpServletRequest.getHeader("access-control-request-method");
+		
+		if(httpMethod.equalsIgnoreCase("options") && originHeader!=null && requestMethod!=null) {
+			return true;
+		}
+		
+		return false;
 	}
 }
