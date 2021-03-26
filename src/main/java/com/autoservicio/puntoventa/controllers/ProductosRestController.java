@@ -60,10 +60,13 @@ public class ProductosRestController {
 		
 		Cookie cookie=new Cookie("token",jwt);
 		cookie.setHttpOnly(true);
-		cookie.setMaxAge(-1);
-		
+		cookie.setMaxAge(60*60*2);
 		httpResponse.addCookie(cookie);
+		
+		String header=httpResponse.getHeader("Set-Cookie")+"; SameSite=strict;";
+		httpResponse.setHeader("Set-Cookie", header);
 		httpResponse.setStatus(204);
+		
 	}
 	
 	@GetMapping(value={"/producto/{barcode}"})
