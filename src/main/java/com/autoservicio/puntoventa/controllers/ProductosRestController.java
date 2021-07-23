@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -108,5 +109,11 @@ public class ProductosRestController {
 		List<Productos> productos=productosService.getProductByCoincidences(concidences);
 		
 		return productos;
+	}
+	
+	@PutMapping("/producto/update")
+	void updateProduct(@RequestBody Productos product,HttpServletResponse httpResponse) {
+		productosService.updateProduct(product);
+		httpResponse.setStatus(204);
 	}
 }

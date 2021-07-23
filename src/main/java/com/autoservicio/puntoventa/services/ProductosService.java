@@ -118,7 +118,9 @@ public class ProductosService {
         return words;
     }
     
-    
+    public Productos updateProduct(Productos product) {
+    	return productosCrudRepository.save(product);
+    }
     
     
 }
