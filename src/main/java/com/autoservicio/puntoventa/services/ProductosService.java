@@ -17,6 +17,8 @@ import com.autoservicio.puntoventa.repositories.ProductosRepository;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +41,8 @@ public class ProductosService {
     PuntoVentaMappers puntoVentaMappers;
     
     public Productos getByCode(String code){
-        return productosCrudRepository.findById(code.trim().toUpperCase()).get();
+    	Optional<Productos> productOpt=productosCrudRepository.findById(code.trim().toUpperCase());
+    	return productOpt.isPresent()?productOpt.get():null;
     }
     
     public Iterable<Distribuidor> getAllDistribuidores(){
