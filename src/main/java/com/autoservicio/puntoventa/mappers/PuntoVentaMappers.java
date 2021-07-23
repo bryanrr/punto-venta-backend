@@ -7,6 +7,8 @@ package com.autoservicio.puntoventa.mappers;
 
 import com.autoservicio.puntoventa.dto.CambiosPreciosMapper;
 import com.autoservicio.puntoventa.dto.Productos;
+import com.autoservicio.puntoventa.dto.ProductsSoldPeriodMapper;
+
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -106,5 +108,19 @@ public interface PuntoVentaMappers {
    })
    List<Productos> getProductosSoldPerCategory(@Param("fecha")String fecha, @Param("distribuidorid")int distribuidorid
            );
+   
+   final String getProductsSoldPeriod="SELECT cc.fechacompra, ci.cantidad "
+   		+ " FROM compraindividual ci JOIN compraclientes cc "
+   		+ " ON cc.id=ci.compraid "
+   		+ " WHERE cc.fechacompra >= to_timestamp(#{fechaInicio,javaType=String,jdbcType=VARCHAR}, 'YYYY-MM-DD')"
+   		+ " AND cc.fechacompra <= to_timestamp(#{fechaFin,javaType=String,jdbcType=VARCHAR}, 'YYYY-MM-DD') "
+   		+ " AND ci.codigobarra=#{codigobarra}";
+   
+   @Select(getProductsSoldPeriod)
+   @Results(value = {
+      @Result(property = "cantidad", column = "CANTIDAD"),
+      @Result(property = "fechacompra", column = "FECHACOMPRA")
+   })
+   List<ProductsSoldPeriodMapper> getProductsSoldPeriod(@Param("fechaInicio")String fechaInicio,@Param("fechaFin")String fechaFin, @Param("codigobarra")String codigobarra);
    
 }
