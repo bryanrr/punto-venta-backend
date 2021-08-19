@@ -10,12 +10,15 @@ import com.autoservicio.puntoventa.repositories.ProductosCrudRepository;
 import com.autoservicio.puntoventa.dto.CambiosPreciosMapper;
 import com.autoservicio.puntoventa.dto.Distribuidor;
 import com.autoservicio.puntoventa.dto.Productos;
+import com.autoservicio.puntoventa.dto.ProductsSoldPeriodMapper;
 import com.autoservicio.puntoventa.mappers.PuntoVentaMappers;
 import com.autoservicio.puntoventa.repositories.DistribuidoresRepository;
 import com.autoservicio.puntoventa.repositories.ProductosRepository;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +41,8 @@ public class ProductosService {
     PuntoVentaMappers puntoVentaMappers;
     
     public Productos getByCode(String code){
-        return productosCrudRepository.findById(code.trim().toUpperCase()).get();
+    	Optional<Productos> productOpt=productosCrudRepository.findById(code.trim().toUpperCase());
+    	return productOpt.isPresent()?productOpt.get():null;
     }
     
     public Iterable<Distribuidor> getAllDistribuidores(){
@@ -122,5 +126,16 @@ public class ProductosService {
     	return productosCrudRepository.save(product);
     }
     
+    /**
+     *Get the date and the amount of pieces of an specific product/barcode, sold 
+     *during an specific period of time. 
+     * @param fechaInicio
+     * @param fechaFin
+     * @param codigobarra
+     * @return List<ProductsSoldPeriodMapper>
+     */
+    public List<ProductsSoldPeriodMapper> getProductsSoldPeriod(String fechaInicio, String fechaFin, String codigobarra) {
+    	return puntoVentaMappers.getProductsSoldPeriod(fechaInicio, fechaFin, codigobarra);
+    }
     
 }
