@@ -1,5 +1,6 @@
 package com.autoservicio.puntoventa.security;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +40,13 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter{
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http.csrf().disable().authorizeRequests().antMatchers("/authenticate","/login","/css/**", "/js/**","/assets/images/**").permitAll()
-			.anyRequest().authenticated().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+			.anyRequest().authenticated().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+			.and()
+			.logout(logout -> logout
+	                .logoutSuccessHandler((request, response, authentication) -> {
+	                    response.setStatus(HttpServletResponse.SC_OK);
+	                }
+	            ));
 		http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 		http.addFilter(corsFilter);
 	}
