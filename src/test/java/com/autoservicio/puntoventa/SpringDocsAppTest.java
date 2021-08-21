@@ -1,6 +1,9 @@
 package com.autoservicio.puntoventa;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
+import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
+import static org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
@@ -34,6 +37,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.autoservicio.puntoventa.models.AuthenticationRequest;
 import com.autoservicio.puntoventa.models.ProductSoldPeriodRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -56,28 +60,65 @@ class SpringDocsAppTest {
 	}
 	
 	@Test
+	void testAuthentication() throws Exception {
+		AuthenticationRequest authentication=new AuthenticationRequest("bryanrr13", "Future21");
+		String authString=new ObjectMapper().writeValueAsString(authentication);
+		
+		mockMvc.perform(post("/authenticate")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(authString))
+			.andDo(print())
+			.andExpect(status().is(204))
+			.andDo(document("{methodName}",preprocessRequest(prettyPrint())
+					,requestFields(
+							fieldWithPath("username").description("Username"),
+							fieldWithPath("password").description("Username password")
+					),responseHeaders( 
+							headerWithName("Set-Cookie").description(
+									"Instruction that will set a cookie, which its content is a JWT token")
+					)));
+	}
+	
+	@Test
+	void testLogout() throws Exception {
+		mockMvc.perform(post("/logout")
+				.header("Cookie", "token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJicnlhbnJyMTMiLCJleHAiOjE2Mjk1NzAyMDYsImlhdCI6MTYyOTU2MzAwNn0.FjclidSGS7ZoYRHjcr5RoaJUAsvc0U_pIGM7dJ9Ie8VUQKAX1j0vTPj8WGJGD7lT__MxGAXNk70BvZplcrBmGQ")
+				)
+			.andDo(print())
+			.andExpect(status().is(204))
+			.andDo(document("{methodName}"
+					,requestHeaders( headerWithName("Cookie").description(
+									"\"token=jwtToken\" format, it's a session identifier"))));
+	}
+	
+	@Test
 	void testGetProduct() throws Exception {
 		
 		mockMvc.perform(get("/producto/{barcode}","HUE1000")
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Cookie", "token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJicnlhbnJyMTMiLCJleHAiOjE2Mjk1NzAyMDYsImlhdCI6MTYyOTU2MzAwNn0.FjclidSGS7ZoYRHjcr5RoaJUAsvc0U_pIGM7dJ9Ie8VUQKAX1j0vTPj8WGJGD7lT__MxGAXNk70BvZplcrBmGQ"))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.codigobarra",equalTo("HUE1000")))
 			.andDo(document("{methodName}",preprocessResponse(prettyPrint())
-					,pathParameters(parameterWithName("barcode").description("The product barcode"))));
+					,pathParameters(parameterWithName("barcode").description("The product barcode"))
+					,requestHeaders( headerWithName("Cookie").description(
+							"\"token=jwtToken\" format, it's a session identifier"))));
 	}
 	
 	@Test
 	void testGetProductCoincidences() throws Exception {
 		
 		mockMvc.perform(get("/productos/{matchingString}"," don azu ")
-				.accept(MediaType.APPLICATION_JSON))
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Cookie", "token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJicnlhbnJyMTMiLCJleHAiOjE2Mjk1NzAyMDYsImlhdCI6MTYyOTU2MzAwNn0.FjclidSGS7ZoYRHjcr5RoaJUAsvc0U_pIGM7dJ9Ie8VUQKAX1j0vTPj8WGJGD7lT__MxGAXNk70BvZplcrBmGQ"))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andDo(document("{methodName}"
 					,preprocessResponse(prettyPrint())
 					,pathParameters(parameterWithName("matchingString").description("All the products that have this string value on its \"description\" field"))
-					));
+					,requestHeaders( headerWithName("Cookie").description(
+							"\"token=jwtToken\" format, it's a session identifier"))));
 	}
 	
 	@Test
@@ -88,7 +129,8 @@ class SpringDocsAppTest {
 		mockMvc.perform(post("/producto/sold")
 				.accept(MediaType.APPLICATION_JSON)
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(soldPeriodRequest))
+				.content(soldPeriodRequest)
+				.header("Cookie", "token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJicnlhbnJyMTMiLCJleHAiOjE2Mjk1NzAyMDYsImlhdCI6MTYyOTU2MzAwNn0.FjclidSGS7ZoYRHjcr5RoaJUAsvc0U_pIGM7dJ9Ie8VUQKAX1j0vTPj8WGJGD7lT__MxGAXNk70BvZplcrBmGQ"))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andDo(document("{methodName}",preprocessRequest(prettyPrint())
@@ -105,6 +147,8 @@ class SpringDocsAppTest {
 							fieldWithPath("productsoldperiod[].fechacompra").ignored(),
 							fieldWithPath("productsoldperiod[].cantidad").ignored()
 							)
+					,requestHeaders( headerWithName("Cookie").description(
+							"\"token=jwtToken\" format, it's a session identifier"))
 					));
 	}
 	
@@ -114,7 +158,8 @@ class SpringDocsAppTest {
 		
 		mockMvc.perform(put("/producto/update")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(productJson))
+				.content(productJson)
+				.header("Cookie", "token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJicnlhbnJyMTMiLCJleHAiOjE2Mjk1NzAyMDYsImlhdCI6MTYyOTU2MzAwNn0.FjclidSGS7ZoYRHjcr5RoaJUAsvc0U_pIGM7dJ9Ie8VUQKAX1j0vTPj8WGJGD7lT__MxGAXNk70BvZplcrBmGQ"))
 			.andDo(print())
 			.andExpect(status().is(204))
 			.andDo(document("{methodName}",preprocessRequest(prettyPrint())
@@ -132,6 +177,8 @@ class SpringDocsAppTest {
 							fieldWithPath("distribuidorid.subcategoria").ignored(),
 							fieldWithPath("distribuidorid.codigocategoria").ignored()
 							)
+					,requestHeaders( headerWithName("Cookie").description(
+							"\"token=jwtToken\" format, it's a session identifier"))
 					));
 	}
 
