@@ -1,0 +1,95 @@
+= Documentation for Products API
+
+This is an example output for a service running at http://localhost:8080:
+
+== Login
+
+.request
+include::{snippets}/testAuthentication/http-request.adoc[]
+
+.request fields
+include::{snippets}/testAuthentication/request-fields.adoc[]
+
+.response 
+include::{snippets}/testAuthentication/http-response.adoc[]
+
+.response header
+include::{snippets}/testAuthentication/response-headers.adoc[]
+
+**This header will set the "token" cookie, so for the operations that need this cookie,
+no need to expliclty specify in the request, it will be appended automatically.**
+
+
+== Logout
+
+.request
+include::{snippets}/testLogout/http-request.adoc[]
+
+.request headers
+include::{snippets}/testLogout/request-headers.adoc[]
+
+.response
+include::{snippets}/testLogout/http-response.adoc[]
+
+== Get product details
+.request
+include::{snippets}/testGetProduct/http-request.adoc[]
+
+.path parameters
+include::{snippets}/testGetProduct/path-parameters.adoc[]
+
+.request headers
+include::{snippets}/testGetProduct/request-headers.adoc[]
+
+.response 
+include::{snippets}/testGetProduct/http-response.adoc[]
+
+== Get product coincidences
+=== A list of products that matches an string on its description field
+
+.request
+include::{snippets}/testGetProductCoincidences/http-request.adoc[]
+
+.path parameters
+include::{snippets}/testGetProductCoincidences/path-parameters.adoc[]
+
+.request headers
+include::{snippets}/testGetProductCoincidences/request-headers.adoc[]
+
+.response
+include::{snippets}/testGetProductCoincidences/http-response.adoc[]
+
+
+== Get product sold
+=== The quantity and dates when an specific product was sold, during an specific period
+
+.request
+include::{snippets}/testGetProductSold/http-request.adoc[]
+
+.request fields
+include::{snippets}/testGetProductSold/request-fields.adoc[]
+
+.request headers
+include::{snippets}/testGetProductSold/request-headers.adoc[]
+
+.response
+include::{snippets}/testGetProductSold/http-response.adoc[]
+
+.response fields
+include::{snippets}/testGetProductSold/response-fields.adoc[]
+
+
+== Update product
+
+.request
+include::{snippets}/testUpdateProduct/http-request.adoc[]
+
+.request fields
+include::{snippets}/testUpdateProduct/request-fields.adoc[]
+
+.request headers
+include::{snippets}/testUpdateProduct/request-headers.adoc[]
+
+.response
+include::{snippets}/testUpdateProduct/http-response.adoc[]
+
