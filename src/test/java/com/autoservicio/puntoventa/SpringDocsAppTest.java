@@ -16,6 +16,7 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.requestF
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
+import static org.springframework.restdocs.snippet.Attributes.key;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,12 +32,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.constraints.ConstraintDescriptions;
 import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.autoservicio.puntoventa.dto.Productos;
 import com.autoservicio.puntoventa.models.AuthenticationRequest;
 import com.autoservicio.puntoventa.models.ProductSoldPeriodRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +68,8 @@ class SpringDocsAppTest {
 		AuthenticationRequest authentication=new AuthenticationRequest("bryanrr13", "Future21");
 		String authString=new ObjectMapper().writeValueAsString(authentication);
 		
+		ConstraintDescriptions authenticationConstraints = new ConstraintDescriptions(AuthenticationRequest.class);
+		
 		mockMvc.perform(post("/authenticate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(authString))
@@ -71,8 +77,10 @@ class SpringDocsAppTest {
 			.andExpect(status().is(204))
 			.andDo(document("{methodName}",preprocessRequest(prettyPrint())
 					,requestFields(
-							fieldWithPath("username").description("Username"),
-							fieldWithPath("password").description("Username password")
+							fieldWithPath("username").description("Username").attributes(key("constraints")
+									.value(StringUtils.collectionToDelimitedString(authenticationConstraints.descriptionsForProperty("username"), "."))),
+							fieldWithPath("password").description("Username password").attributes(key("constraints")
+									.value(StringUtils.collectionToDelimitedString(authenticationConstraints.descriptionsForProperty("password"), ".")))
 					),responseHeaders( 
 							headerWithName("Set-Cookie").description(
 									"Instruction that will set a cookie, which its content is a JWT token")
@@ -126,6 +134,8 @@ class SpringDocsAppTest {
 		ProductSoldPeriodRequest pr=new ProductSoldPeriodRequest("CIG","2018-09-20","2018-09-22");
 		String soldPeriodRequest=new ObjectMapper().writeValueAsString(pr);
 		
+		ConstraintDescriptions productSoldConstraints = new ConstraintDescriptions(ProductSoldPeriodRequest.class);
+		
 		mockMvc.perform(post("/producto/sold")
 				.accept(MediaType.APPLICATION_JSON)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -136,9 +146,15 @@ class SpringDocsAppTest {
 			.andDo(document("{methodName}",preprocessRequest(prettyPrint())
 					,preprocessResponse(prettyPrint())
 					,requestFields(
-							fieldWithPath("codigobarra").description("The barcode of the product"),
-							fieldWithPath("fechainicio").description("The starting date of purchases of this product"),
+							fieldWithPath("codigobarra").description("The barcode of the product")
+							.attributes(key("constraints")
+									.value(StringUtils.collectionToDelimitedString(productSoldConstraints.descriptionsForProperty("codigobarra"), "."))),
+							fieldWithPath("fechainicio").description("The starting date of purchases of this product")
+							.attributes(key("constraints")
+									.value(StringUtils.collectionToDelimitedString(productSoldConstraints.descriptionsForProperty("fechainicio"), "."))),
 							fieldWithPath("fechafin").description("The ending date of purchases of this product")
+							.attributes(key("constraints")
+									.value(StringUtils.collectionToDelimitedString(productSoldConstraints.descriptionsForProperty("fechafin"), ".")))
 							)
 					,responseFields(
 							fieldWithPath("codigobarra").description("Barcode product"),
@@ -156,6 +172,8 @@ class SpringDocsAppTest {
 	void testUpdateProduct() throws Exception {
 		String productJson="{\"precioventa\":25,\"preciocompra\":19,\"codigobarra\":\"HUE1000\",\"descripcion\":\"Huevo 1 kg\",\"existencia\":-26,\"fraccion\":\"Y\",\"promocion\":\"N\",\"lastupdatedtime\":\"2021-04-06T16:39:08.482+00:00\",\"distribuidorid\":{\"id\":41,\"categoria\":\"HUEVO\",\"subcategoria\":\"Huevo\",\"codigocategoria\":\"HUE\"}}";
 		
+		ConstraintDescriptions updateConstraints = new ConstraintDescriptions(Productos.class);
+		
 		mockMvc.perform(put("/producto/update")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(productJson)
@@ -163,15 +181,28 @@ class SpringDocsAppTest {
 			.andDo(print())
 			.andExpect(status().is(204))
 			.andDo(document("{methodName}",preprocessRequest(prettyPrint())
-					,requestFields(fieldWithPath("codigobarra").description("Barcode product"),
-							fieldWithPath("descripcion").description("Description product"),
-							fieldWithPath("preciocompra").description("Purchased price"),
-							fieldWithPath("precioventa").description("Selling price"),
-							fieldWithPath("existencia").description("Quantity in stock.Default 0"),
-							fieldWithPath("fraccion").description("Y/N. If the product can be fractional sold"),
-							fieldWithPath("promocion").description("Y/N. If there is a promotion"),
-							fieldWithPath("lastupdatedtime").description("The date the request is sent"),
-							fieldWithPath("distribuidorid").description("Keep previous values"),
+					,requestFields(fieldWithPath("codigobarra").description("Barcode product")
+							.attributes(key("constraints")
+									.value(StringUtils.collectionToDelimitedString(updateConstraints.descriptionsForProperty("codigobarra"), "."))),
+							fieldWithPath("descripcion").description("Description product")
+								.attributes(key("constraints")
+									.value(StringUtils.collectionToDelimitedString(updateConstraints.descriptionsForProperty("descripcion"), "."))),
+							fieldWithPath("preciocompra").description("Purchased price")
+								.attributes(key("constraints")
+									.value(StringUtils.collectionToDelimitedString(updateConstraints.descriptionsForProperty("preciocompra"), "."))),
+							fieldWithPath("precioventa").description("Selling price")
+								.attributes(key("constraints")
+									.value(StringUtils.collectionToDelimitedString(updateConstraints.descriptionsForProperty("precioventa"), "."))),
+							fieldWithPath("existencia").description("Quantity in stock.Default 0")
+								.attributes(key("constraints").value("No required")),
+							fieldWithPath("fraccion").description("Y/N. If the product can be fractional sold")
+								.attributes(key("constraints").value("No required")),
+							fieldWithPath("promocion").description("Y/N. If there is a promotion")
+								.attributes(key("constraints").value("No required")),
+							fieldWithPath("lastupdatedtime").description("The date the request is sent")
+								.attributes(key("constraints").value("No required")),
+							fieldWithPath("distribuidorid").description("Keep previous values")
+								.attributes(key("constraints").value("No required")),
 							fieldWithPath("distribuidorid.id").ignored(),
 							fieldWithPath("distribuidorid.categoria").ignored(),
 							fieldWithPath("distribuidorid.subcategoria").ignored(),
