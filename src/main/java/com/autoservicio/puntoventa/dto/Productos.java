@@ -20,6 +20,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "PRODUCTOS")
@@ -35,20 +36,23 @@ import javax.persistence.TemporalType;
     , @NamedQuery(name = "Productos.findByLastupdatedtime", query = "SELECT p FROM Productos p WHERE p.lastupdatedtime = :lastupdatedtime")})
 
 public class Productos implements Serializable {
-
+	@Pattern(regexp="^[0-9]\\d{0,4}(\\.\\d{0,2})?$")
     @Column(name = "PRECIOVENTA")
     private BigDecimal precioventa;
     
-    
+	@Pattern(regexp="^[0-9]\\d{0,4}(\\.\\d{0,2})?$")
     @Column(name = "PRECIOCOMPRA")
     private BigDecimal preciocompra;
     
 
     private static final long serialVersionUID = 1L;
+    
+    @Pattern(regexp="^(?=.{2,30}$)(?![ ])[a-zA-Z0-9]+(?<![_.])$")
     @Id
     @Basic(optional = false)
     @Column(name = "CODIGOBARRA",nullable = false,length = 30)
     private String codigobarra;
+    @Pattern(regexp="^(?=.{2,50}$)[a-zA-Z0-9\\u00f1\\u00d1 ]+(?<![_.])$")
     @Basic(optional = false)
     @Column(name = "DESCRIPCION",nullable = false,length = 80)
     private String descripcion;
