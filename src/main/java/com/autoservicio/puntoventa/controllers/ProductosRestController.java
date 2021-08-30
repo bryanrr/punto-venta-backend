@@ -143,9 +143,15 @@ public class ProductosRestController {
 	}
 	
 	@PutMapping("/producto/update")
-	void updateProduct(@RequestBody Productos product,HttpServletResponse httpResponse) {
-		productosService.updateProduct(product);
-		httpResponse.setStatus(204);
+	void updateProduct(@RequestBody Productos product,HttpServletResponse httpResponse) throws IOException {
+		Set<ConstraintViolation<Productos>> violations = validator.validate(product);
+		
+		if(violations.size()==0) {
+			productosService.updateProduct(product);
+			httpResponse.setStatus(204);
+		}else {
+			httpResponse.sendError(400);
+		}
 	}
 	
 	@PostMapping("/producto/sold")
