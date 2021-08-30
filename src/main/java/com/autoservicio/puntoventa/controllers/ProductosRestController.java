@@ -1,17 +1,24 @@
 package com.autoservicio.puntoventa.controllers;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,13 +31,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autoservicio.puntoventa.dto.Productos;
-import com.autoservicio.puntoventa.dto.ProductsSoldPeriodMapper;
 import com.autoservicio.puntoventa.models.AuthenticationRequest;
 import com.autoservicio.puntoventa.models.ProductSoldPeriodRequest;
 import com.autoservicio.puntoventa.models.ProductSoldPeriodResponse;
 import com.autoservicio.puntoventa.services.JwtBlacklistService;
 import com.autoservicio.puntoventa.services.ProductosService;
 import com.autoservicio.puntoventa.util.JwtUtil;
+import com.autoservicio.puntoventa.util.RegexpUtil;
 
 import io.jsonwebtoken.JwtException;
 
@@ -53,27 +60,35 @@ public class ProductosRestController {
 	@Autowired
 	JwtBlacklistService jwtBlacklistService;
 	
+	ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+	Validator validator = factory.getValidator();
+	
 	@RequestMapping(value="/authenticate", method=RequestMethod.POST)
 	public void createAuthenticationToken(@RequestBody AuthenticationRequest authRequest,HttpServletResponse httpResponse)throws Exception{
-		try {
-		authManager.authenticate(
-			new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-		}catch(BadCredentialsException e) {
-			httpResponse.sendError(401);
+		Set<ConstraintViolation<AuthenticationRequest>> violations = validator.validate(authRequest);
+		
+		if(violations.size()==0) {
+			try {
+				authManager.authenticate(
+					new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+				
+				final UserDetails userDetails=userDetailsService.loadUserByUsername(authRequest.getUsername());
+				final String jwt=jwtTokenUtil.generateToken(userDetails);
+				
+				Cookie cookie=new Cookie("token",jwt);
+				cookie.setHttpOnly(true);
+				cookie.setMaxAge(60*60*2);
+				httpResponse.addCookie(cookie);
+				
+				String header=httpResponse.getHeader("Set-Cookie")+"; SameSite=strict;";
+				httpResponse.setHeader("Set-Cookie", header);
+				httpResponse.setStatus(204);
+			}catch(BadCredentialsException e) {
+				httpResponse.sendError(401);
+			}
+		}else {
+			httpResponse.sendError(400,"Username/password in bad format");
 		}
-		
-		final UserDetails userDetails=userDetailsService.loadUserByUsername(authRequest.getUsername());
-		final String jwt=jwtTokenUtil.generateToken(userDetails);
-		
-		Cookie cookie=new Cookie("token",jwt);
-		cookie.setHttpOnly(true);
-		cookie.setMaxAge(60*60*2);
-		httpResponse.addCookie(cookie);
-		
-		String header=httpResponse.getHeader("Set-Cookie")+"; SameSite=strict;";
-		httpResponse.setHeader("Set-Cookie", header);
-		httpResponse.setStatus(204);
-		
 	}
 	
 	@RequestMapping(value="/logout", method=RequestMethod.POST)
@@ -102,15 +117,27 @@ public class ProductosRestController {
 	}
 	
 	@GetMapping(value={"/producto/{barcode}"})
-	Productos getProductByCode(@PathVariable("barcode")String barcode) {
-		Productos p=productosService.getByCode(barcode);
+	Productos getProductByCode(@PathVariable("barcode")String barcode,HttpServletResponse response) throws IOException {
+		Productos p=new Productos();
+		
+		if(barcode.matches(RegexpUtil.BARCODE)) {
+			p=productosService.getByCode(barcode);
+		}else {
+			response.sendError(400);
+		}
 		
 		return p;
 	}
 	
 	@GetMapping(value={"/productos/{coincidences}"})
-	List<Productos> getListProducts(@PathVariable("coincidences")String concidences) {
-		List<Productos> productos=productosService.getProductByCoincidences(concidences);
+	List<Productos> getListProducts(@PathVariable("coincidences")String concidences,HttpServletResponse response) throws IOException {
+		List<Productos> productos=null;
+		
+		if(concidences.matches(RegexpUtil.DESCRIPTION)) {
+			productos=productosService.getProductByCoincidences(concidences);
+		}else {
+			response.sendError(400);
+		}
 		
 		return productos;
 	}
@@ -122,9 +149,16 @@ public class ProductosRestController {
 	}
 	
 	@PostMapping("/producto/sold")
-	ProductSoldPeriodResponse getProductSoldPeriod(@RequestBody ProductSoldPeriodRequest pRequest){
-		Productos product=productosService.getByCode(pRequest.getCodigobarra());
-		ProductSoldPeriodResponse pResponse=new ProductSoldPeriodResponse();
+	ProductSoldPeriodResponse getProductSoldPeriod(@RequestBody ProductSoldPeriodRequest pRequest,HttpServletResponse response) throws IOException{
+		Productos product=null;
+		ProductSoldPeriodResponse pResponse=null;
+		
+		if(pRequest.getCodigobarra().matches(RegexpUtil.BARCODE) && pRequest.getFechainicio().matches(RegexpUtil.DATE) && pRequest.getFechafin().matches(RegexpUtil.DATE)) {
+			product=productosService.getByCode(pRequest.getCodigobarra());
+			pResponse=new ProductSoldPeriodResponse();
+		}else {
+			response.sendError(400);
+		}
 		
 		if(product!=null) {
 			pResponse=new ProductSoldPeriodResponse(product.getCodigobarra(), product.getDescripcion());
