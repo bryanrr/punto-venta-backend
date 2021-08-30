@@ -153,7 +153,9 @@ public class ProductosRestController {
 		Productos product=null;
 		ProductSoldPeriodResponse pResponse=null;
 		
-		if(pRequest.getCodigobarra().matches(RegexpUtil.BARCODE) && pRequest.getFechainicio().matches(RegexpUtil.DATE) && pRequest.getFechafin().matches(RegexpUtil.DATE)) {
+		Set<ConstraintViolation<ProductSoldPeriodRequest>> violations = validator.validate(pRequest);
+		
+		if(violations.size()==0) {
 			product=productosService.getByCode(pRequest.getCodigobarra());
 			pResponse=new ProductSoldPeriodResponse();
 		}else {
