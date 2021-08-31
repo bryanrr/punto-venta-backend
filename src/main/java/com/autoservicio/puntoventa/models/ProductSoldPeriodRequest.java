@@ -2,13 +2,15 @@ package com.autoservicio.puntoventa.models;
 
 import javax.validation.constraints.Pattern;
 
+import com.autoservicio.puntoventa.util.RegexpUtil;
+
 public class ProductSoldPeriodRequest {
 
-	@Pattern(regexp="^(?=.{2,30}$)(?![ ])[a-zA-Z0-9]+(?<![_.])$")
+	@Pattern(regexp=RegexpUtil.BARCODE)
 	private String codigobarra;
-	@Pattern(regexp="^\\d{4}\\-(0?[1-9]|1[012])\\-(0?[1-9]|[12][0-9]|3[01])$")
+	@Pattern(regexp=RegexpUtil.DATE)
 	private String fechainicio;
-	@Pattern(regexp="^\\d{4}\\-(0?[1-9]|1[012])\\-(0?[1-9]|[12][0-9]|3[01])$")
+	@Pattern(regexp=RegexpUtil.DATE)
 	private String fechafin;
 	
 	public ProductSoldPeriodRequest() {
